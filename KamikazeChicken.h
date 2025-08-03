@@ -12,22 +12,18 @@ public:
             std::cout << "Failed to load enemy image!" << std::endl;
         }
         sprite.setTexture(texture);
-        sprite.setScale(0.15f, 0.15f);
+        sprite.setScale(0.13f, 0.13f);
         sprite.setPosition(x, y);
         health = 1; 
         isCharging = false;
-        chargeSpeed = 5.0f;
     }
 
     void update() override {
-        // Start charging when player is close
-        if (sprite.getPosition().x < 200 && !isCharging) {
-            sprite.move(-2.0f, 1.0);
+        sprite.move(-2.0f, 1.5);
+        if (sprite.getPosition().x < 1000) { // starts charging when player is close
             isCharging = true;
-            Enemy::update();
+            sprite.move(-15.0f, 0);
         }
-
-        
     }
 
      void onDeath() override {
