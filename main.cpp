@@ -7,6 +7,7 @@
 #include "PirateChicken.h"
 #include "KamikazeChicken.h"
 #include "Effects.h"
+#include "HealthPowerUp.h"
 
 void resetGame(Player& player, Enemy* enemies[], int& enemyCount, int& score, int& health) {
     player.reset();
@@ -163,7 +164,7 @@ int main() {
 
 
     sf::Texture heartTexture;
-    if (!heartTexture.loadFromFile("C:/Users/Choudry Shb/source/repos/oop_project_shooter/oop_project_shooter/assets/Hit Points.png")) {
+    if (!heartTexture.loadFromFile("C:/Users/Choudry Shb/source/repos/aerial_defenders_summer_25/assets/HitPoints.png")) {
         std::cout << "Failed to load heart image!" << std::endl;
         return -1;
     }
@@ -179,14 +180,18 @@ int main() {
     Enemy* enemies[50];
     PirateChicken* pirateChickens[30];
     KamikazeChicken* kamikazeChicken[20]; // array for kamikaze 
+    HealthPowerUp healthPowerUp;
+
     int pirateCount = 0;
-
-
     int enemyCount = 0;
+    int kamikazeCount = 0;
+
     sf::Clock enemySpawnClock;
     sf::Clock pirateSpawnClock;
-    bool isGameOver = false;
+    sf::Clock kamikazeSpawnClock;
+    sf::Clock healthPowerUpClock;
 
+    bool isGameOver = false;
 
     enum GameState { LEVEL1, TRANSITION_TO_LEVEL2, LEVEL2 };
     GameState gameState = LEVEL1;
@@ -204,6 +209,12 @@ int main() {
 
         if (gameState == LEVEL1) {
 
+            // Temporarily add at start of game loop:
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
+                healthPowerUp.resetPosition();
+                healthPowerUp.activate();
+            }
+
             sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
@@ -215,7 +226,6 @@ int main() {
                     enemySpawnClock.restart();
                 }
             }
-
 
             // Check if player collides with any enemies
             for (int i = 0; i < enemyCount; ++i) {
@@ -233,7 +243,7 @@ int main() {
                 }
             }
             //check score
-            if (score >= 50) {
+            if (score >= 100) {
                 background.stop();
                 gameState = TRANSITION_TO_LEVEL2;
             }
@@ -355,8 +365,27 @@ int main() {
                     bgSprite2.setPosition(bgSprite.getPosition().x + bgSprite.getGlobalBounds().width, 0);
                 }
 
-                // RENDERING  abhi na dekhna
-                // Get default view
+                // power up stuff:
+                healthPowerUp.update(health); // Update position every frame
+              
+                if (health < 3 && healthPowerUpClock.getElapsedTime().asSeconds() > 10.0f) {
+                    healthPowerUp.resetPosition();
+                    healthPowerUp.activate();
+                    healthPowerUpClock.restart();
+                }
+
+                if (healthPowerUp.isActive() && healthPowerUp.checkCollision(player.getBounds())) {
+                    if (health < 3) {
+                        health++;
+                        player.triggerGlow();
+                        healthPowerUp.deactivate(); // Disappear after collection
+                        healthPowerUp.resetPosition();
+                    }
+                }
+
+                player.updateGlow();
+
+                // RENDERING  --> abhi na dekhna
                 sf::View gameView = window.getDefaultView();
 
                 // Apply shake to view
@@ -369,11 +398,14 @@ int main() {
                 player.draw(window);
                 player.drawBullets(window);
 
+
                 for (int i = 0; i < enemyCount; ++i) {
                     if (isGameOver) { break; }
                     enemies[i]->draw(window);
                     enemies[i]->drawBullets(window);
                 }
+
+                healthPowerUp.draw(window);
 
                 for (int i = 0; i < health; ++i)
                     window.draw(hearts[i]);
@@ -393,7 +425,6 @@ int main() {
                 // Reset view when done
                 Effects::resetView(gameView, window);
                 window.setView(gameView);
-
                 window.display();
             }
         }
@@ -488,7 +519,7 @@ int main() {
                     enemySpawnClock.restart();
                 }
             }
-            if (score >= 100) {
+            if (score >= 200) { // winning game
                 isGameOver = true;
                 window.draw(levelclearText);
                 window.draw(finalScoreText);
@@ -519,27 +550,40 @@ int main() {
             player.updateBullets();
 
             sf::Texture heartTexture;
-            if (!heartTexture.loadFromFile("C:/Users/Choudry Shb/source/repos/oop_project_shooter/oop_project_shooter/assets/Hit Points.png")) {
+            if (!heartTexture.loadFromFile("C:/Users/Choudry Shb/source/repos/aerial_defenders_summer_25/assets/HitPoints.png")) {
                 std::cout << "Failed to load heart image!" << std::endl;
                 return -1;
             }
 
-
-            if (pirateSpawnClock.getElapsedTime().asSeconds() > 5.0f && pirateCount < 10) {
+            // spawining pirate chickens
+            if (pirateSpawnClock.getElapsedTime().asSeconds() > 3.0f && pirateCount < 10) {
                 pirateChickens[pirateCount++] = new PirateChicken(1200, rand() % 550);  // random Y position, fixed x position
                 pirateSpawnClock.restart();
             }
             for (int i = 0; i < pirateCount; ++i) {
                 if (pirateChickens[i]) {
-                    pirateChickens[i]->update();
                     pirateChickens[i]->draw(window);
+                    pirateChickens[i]->update();
                     pirateChickens[i]->updateBullets();
                     pirateChickens[i]->drawBullets(window);
                 }
             }
-            for (int i = 0; i < pirateCount; ++i) {
-                if (!pirateChickens[i]) continue;
 
+            // spawning kamikaze chicken
+            if (kamikazeSpawnClock.getElapsedTime().asSeconds() > 7.0f && kamikazeCount < 10) {
+                kamikazeChicken[kamikazeCount++] = new KamikazeChicken(1200, rand() % 300);
+                kamikazeSpawnClock.restart();
+            }
+            for (int i = 0; i < kamikazeCount; i++) {
+                if (kamikazeChicken[i]) {
+                    kamikazeChicken[i]->draw(window);
+                    kamikazeChicken[i]->update();
+                }
+            }
+
+            // player_bullet - enemy collision
+            for (int i = 0; i < pirateCount; ++i) {
+                if (!pirateChickens[i] && !kamikazeChicken[i]) continue;
                 for (int j = player.getBulletCount() - 1; j >= 0; --j) {
                     Bullet* b = player.getBullets()[j];
                     if (b && pirateChickens[i]->getBounds().intersects(b->getBounds())) {
@@ -558,6 +602,7 @@ int main() {
                     }
                 }
             }
+
             //enemy_bullet-player collision
             for (int i = 0; i < pirateCount; ++i) {
                 if (!pirateChickens[i]) continue;
@@ -606,27 +651,62 @@ int main() {
             }
 
             //enemy-player collision
-            for (int i = 0; i < pirateCount; ++i) {
+            for (int i = 0; i < pirateCount; i++) {
                 if (isGameOver) { break; }
                 if (player.getBounds().intersects(pirateChickens[i]->getBounds())) {
                     health--;
+                    Effects::triggerShake(12.0f, 1.1f); 
                     if (health == 0)
                         isGameOver = true;
                     delete pirateChickens[i];
                     pirateChickens[i] = pirateChickens[--pirateCount];
                     pirateChickens[pirateCount] = nullptr;
                     i--;
+                }            
+            }
+
+            for (int i = 0; i < kamikazeCount; i++) {
+                if (player.getBounds().intersects(kamikazeChicken[i]->getBounds())) {
+                    health--;
+                    Effects::triggerShake(12.0f, 1.1f); // screen shake
+                    if (health == 0) {
+                        isGameOver = true;
+                    }
+                    delete kamikazeChicken[i];
+                    kamikazeChicken[i] = kamikazeChicken[--kamikazeCount];
+                    kamikazeChicken[kamikazeCount] = nullptr;
+                    i--;
                 }
             }
 
+            // power up stuff:
+            healthPowerUp.update(health); // Update position every frame
+
+            if (health < 3 && healthPowerUpClock.getElapsedTime().asSeconds() > 10.0f) {
+                healthPowerUp.resetPosition();
+                healthPowerUp.activate();
+                healthPowerUpClock.restart();
+            }
+
+            if (healthPowerUp.isActive() && healthPowerUp.checkCollision(player.getBounds())) {
+                if (health < 3) {
+                    health++;
+                    player.triggerGlow();
+                    healthPowerUp.deactivate(); // Disappear after collection
+                    healthPowerUp.resetPosition();
+                }
+            }
+
+            player.updateGlow();
 
 			// RENDERING
-            // Get default view
             sf::View gameView = window.getDefaultView();
 
             // Apply shake to view
             Effects::applyShake(gameView);
             window.setView(gameView);
+
+            healthPowerUp.draw(window);
 
             for (int i = 0; i < 3; ++i) {
                 hearts[i].setTexture(heartTexture);
