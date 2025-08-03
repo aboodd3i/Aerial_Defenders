@@ -18,10 +18,10 @@ public:
 
     // Virtual functions for polymorphic behavior
     virtual void update() {
-        sprite.move(-2.0f, 1.0);
+        sprite.move(-2.5f, 1.5);
 
         // Automatic shooting
-        if (shootClock.getElapsedTime().asSeconds() > 1.0f && bulletCount < 10) {
+        if (shootClock.getElapsedTime().asSeconds() > 2.f && bulletCount < 10) {
             shoot();
             shootClock.restart();
         }
@@ -29,7 +29,7 @@ public:
 
     virtual void shoot() {
         sf::Vector2f pos = sprite.getPosition();
-        bullets[bulletCount++] = new Bullet(sprite.getPosition().x, sprite.getPosition().y + sprite.getGlobalBounds().height / 2, "C:/Users/Choudry Shb/source/repos/aerial_defenders_summer_25/assets/Bullet_PirateEnemy.png", 5.0f);
+        bullets[bulletCount++] = new Bullet(sprite.getPosition().x, sprite.getPosition().y + sprite.getGlobalBounds().height / 2, "C:/Users/Choudry Shb/source/repos/aerial_defenders_summer_25/assets/Bullet_PirateEnemy.png", 8.0f);
     }
 
     virtual void updateBullets() {
