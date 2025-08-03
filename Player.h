@@ -10,6 +10,9 @@ private:
     Bullet* bullets[50];
     int bulletCount;
     sf::Clock shootTimer;
+    bool isGlowing = false;
+    sf::Color orignalColor;
+    sf::Clock glowClock;
 
 public:
     Player() {
@@ -19,7 +22,7 @@ public:
         sprite.setTexture(texture);
         sprite.setScale(0.23f, 0.23f);
         sprite.setPosition(50, 300);
-
+        orignalColor = sprite.getColor();
         bulletCount = 0;
         for (int i = 0; i < 50; ++i) bullets[i] = nullptr;
     }
@@ -83,6 +86,12 @@ public:
 
     void draw(sf::RenderWindow& window) {
         window.draw(sprite);
+        if (isGlowing) { // creates a circular glowing ring around player when health is collected
+            sf::CircleShape glowingCircle(55);
+            glowingCircle.setFillColor(sf::Color(255, 255, 0, 50));
+            glowingCircle.setPosition(sprite.getPosition().x + 33, sprite.getPosition().y - 30);
+            window.draw(glowingCircle);
+        }
     }
 
     sf::FloatRect getBounds() const {
@@ -114,6 +123,20 @@ public:
             bullets[i] = nullptr;
         }
         bulletCount = 0;
+    }
+
+    // functions to glow player:
+    void triggerGlow() {    // begins the glow effect
+        isGlowing = true;
+        glowClock.restart();
+        sprite.setColor(sf::Color::Yellow);
+    }
+
+    void updateGlow() {     // checks duration and ends glowing effect
+        if (isGlowing && glowClock.getElapsedTime().asSeconds() > 1.2f) {
+            isGlowing = false;
+            sprite.setColor(orignalColor);
+        }
     }
 
     ~Player() {
