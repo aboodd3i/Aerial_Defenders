@@ -4,7 +4,7 @@
 
 class Effects {
 private:
-    static float shakeOffsetX; 
+    static float shakeOffsetX;
     static float shakeOffsetY;
     static float shakeMagnitude;
     static float shakeDuration;
