@@ -13,8 +13,6 @@ protected:
     sf::Clock shootClock;
     int health = 1;
     int bulletCount = 0;
-    /*float speedX = -1.1f;
-    float speedY = 1.1f;*/
 
 public:
     Enemy(float x, float y) {
@@ -85,19 +83,20 @@ public:
         return health > 0;
     }
 
-    sf::FloatRect getBounds() const {
+    virtual sf::FloatRect getBounds() const {
         return sprite.getGlobalBounds();  // Returns the enemy's bounding box
     }
 
 
-    bool isOffScreen() const {
+    virtual bool isOffScreen() const {
         return sprite.getPosition().y > 800;
     }
+
     Bullet** getBullets() {
         return bullets;
     }
 
-    ~Enemy() {
+    virtual ~Enemy() {
         for (int i = 0; i < bulletCount; ++i)
             delete bullets[i];
     }
